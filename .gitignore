@@ -1,0 +1,109 @@
+# ===== 依赖 =====
+node_modules/
+
+# ===== 构建输出 =====
+out/
+dist/
+build/
+release/
+
+# ===== Electron =====
+*.app
+*.exe
+*.dll
+*.so
+*.dylib
+
+# ===== electron-builder =====
+release-builds/
+*.snap
+
+# ===== Vite =====
+.vite/
+*.vite-report
+
+# ===== TypeScript =====
+*.tsbuildinfo
+
+# ===== Tailwind CSS =====
+.tailwindcss/
+
+# ===== 测试 =====
+coverage/
+.nyc_output/
+*.test.js.snap
+
+# ===== 系统文件 =====
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ===== 编辑器临时文件 =====
+*.swp
+*.swo
+*~
+\#*\#
+.\#*
+
+# ===== IDE =====
+.vscode/settings.json
+.vscode/extensions.json
+.vscode/launch.json
+.vscode/tasks.json
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# ===== 日志 =====
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ===== 环境变量 =====
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+
+# ===== 运行时数据 =====
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# ===== 缓存 =====
+.cache/
+.eslintcache
+*.tsbuildinfo
+
+# ===== 压缩包 =====
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# ===== 临时文件 =====
+tmp/
+temp/
+*.tmp
+
+# 文档
+spec.md
+plan.md
+SKILL.md
+AGENTS.md
+需求文档.md
