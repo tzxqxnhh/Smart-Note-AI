@@ -1,6 +1,7 @@
 import { app, BrowserWindow, shell } from 'electron';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
+import { setupIPC } from './ipc/index';
 
 function createWindow(): void {
   // 创建浏览器窗口
@@ -34,9 +35,18 @@ function createWindow(): void {
   }
 }
 
+// 禁用 GPU 硬件加速并关闭 GPU 沙箱，解决 Windows 上 GPU 进程崩溃问题
+app.disableHardwareAcceleration();
+app.commandLine.appendSwitch('disable-gpu-sandbox');
+app.commandLine.appendSwitch('no-sandbox');
+app.commandLine.appendSwitch('disable-software-rasterizer');
+
 // 应用准备就绪后创建窗口
 app.whenReady().then(() => {
   electronApp.setAppUserModelId('com.demo.smart-note');
+
+  // 注册所有 IPC 处理器
+  setupIPC();
 
   // 开发环境默认打开或关闭 F12 开发者工具
   app.on('browser-window-created', (_, window) => {

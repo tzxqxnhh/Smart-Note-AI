@@ -12,6 +12,7 @@ export function createMockElectronAPI() {
     createDirectory: vi.fn().mockResolvedValue(undefined),
     rename: vi.fn().mockResolvedValue(undefined),
     deleteItem: vi.fn().mockResolvedValue(undefined),
+    trashItem: vi.fn().mockResolvedValue(undefined),
     searchFiles: vi.fn().mockResolvedValue([]),
     ragIndexAll: vi.fn().mockResolvedValue({ fileCount: 0, chunkCount: 0 }),
     ragQuery: vi.fn().mockResolvedValue({ content: '', citations: [] }),

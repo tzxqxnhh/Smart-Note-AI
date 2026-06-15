@@ -14,6 +14,7 @@ export const IPC_CHANNELS = {
   CREATE_DIRECTORY: 'fs:create-directory',
   RENAME: 'fs:rename',
   DELETE: 'fs:delete',
+  TRASH_ITEM: 'fs:trash',
 
   // 搜索
   SEARCH: 'search:query',

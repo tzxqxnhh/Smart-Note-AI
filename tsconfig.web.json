@@ -24,9 +24,6 @@
   "include": [
     "src/renderer/**/*.ts",
     "src/renderer/**/*.tsx",
-    "src/shared/**/*.ts",
-    "tests/renderer/**/*.ts",
-    "tests/renderer/**/*.tsx",
-    "tests/setup.ts"
+    "src/shared/**/*.ts"
   ]
 }

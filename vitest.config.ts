@@ -5,23 +5,10 @@ import path from 'path';
 export default defineConfig({
   plugins: [react()],
   test: {
+    globals: true,
+    environment: 'jsdom',
     setupFiles: ['./tests/setup.ts'],
-    projects: [
-      {
-        name: 'main',
-        test: {
-          environment: 'node',
-          include: ['tests/main/**/*.test.ts'],
-        },
-      },
-      {
-        name: 'renderer',
-        test: {
-          environment: 'jsdom',
-          include: ['tests/renderer/**/*.test.{ts,tsx}'],
-        },
-      },
-    ],
+    include: ['tests/**/*.test.{ts,tsx}'],
   },
   resolve: {
     alias: {
