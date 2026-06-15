@@ -1,8 +1,10 @@
 import { useEditorStore } from '../../stores/useEditorStore';
+import { useSearchStore } from '../../stores/useSearchStore';
 import { EditorTabs } from './EditorTabs';
 import { EditorToolbar } from './EditorToolbar';
 import { CodeEditor } from './CodeEditor';
 import { MarkdownPreview } from './MarkdownPreview';
+import { Search } from 'lucide-react';
 
 export function EditorContainer() {
   const tabs = useEditorStore((s) => s.tabs);
@@ -14,6 +16,8 @@ export function EditorContainer() {
   const updateContent = useEditorStore((s) => s.updateContent);
   const saveCurrentFile = useEditorStore((s) => s.saveCurrentFile);
   const toggleViewMode = useEditorStore((s) => s.toggleViewMode);
+
+  const openSearch = useSearchStore((s) => s.openSearch);
 
   const activeTab = tabs.find((t) => t.id === activeTabId);
   const activeContent = activeTab ? (contents[activeTab.filePath] ?? '') : '';
@@ -29,6 +33,16 @@ export function EditorContainer() {
   if (!activeTab) {
     return (
       <div className="h-full flex flex-col" data-testid="center-panel">
+        {/* 即使没有打开文件也显示搜索按钮 */}
+        <div className="flex items-center justify-end px-3 py-1.5 border-b border-gray-700 bg-gray-850 shrink-0">
+          <button
+            className="flex items-center gap-1 px-2 py-1 text-sm text-gray-300 hover:bg-gray-700 rounded"
+            onClick={openSearch}
+            title="搜索 (Ctrl+Shift+F)"
+          >
+            <Search size={14} />
+          </button>
+        </div>
         <div className="flex-1 flex items-center justify-center text-gray-500">
           <div className="text-center">
             <p className="text-lg">打开文件开始编辑</p>
@@ -53,6 +67,7 @@ export function EditorContainer() {
         wordCount={wordCount}
         onSave={saveCurrentFile}
         onToggleViewMode={toggleViewMode}
+        onSearchOpen={openSearch}
       />
 
       {/* 编辑/预览区域 */}

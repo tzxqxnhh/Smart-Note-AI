@@ -61,6 +61,10 @@ export async function trashItem(itemPath: string): Promise<void> {
   return wrap(getAPI().trashItem(itemPath));
 }
 
+export async function copyItem(sourcePath: string, destDir: string): Promise<void> {
+  return wrap(getAPI().copyItem(sourcePath, destDir));
+}
+
 // 搜索
 export async function searchFiles(query: string, rootPath: string) {
   return wrap(getAPI().searchFiles(query, rootPath));

@@ -5,7 +5,7 @@ import * as os from 'os';
 
 // 文件系统操作函数（在 src/main/services/file-ops.ts 中实现）
 // 这里导入纯函数进行测试，不依赖 Electron
-import { listDirectory, readFileContent, writeFileContent, createEmptyFile, createNewDirectory, renameItem, deleteItemFromDisk } from '../../src/main/services/file-ops';
+import { listDirectory, readFileContent, writeFileContent, createEmptyFile, createNewDirectory, renameItem, deleteItemFromDisk, copyItem } from '../../src/main/services/file-ops';
 
 describe('文件系统操作', () => {
   let testDir: string;
@@ -122,6 +122,68 @@ describe('文件系统操作', () => {
       await deleteItemFromDisk(path.join(testDir, 'subfolder'));
       const exists = await fs.access(path.join(testDir, 'subfolder')).then(() => true).catch(() => false);
       expect(exists).toBe(false);
+    });
+  });
+
+  describe('copyItem', () => {
+    it('应该复制文件到目标目录', async () => {
+      const destDir = await fs.mkdtemp(path.join(os.tmpdir(), 'smart-note-copy-'));
+      try {
+        await copyItem(path.join(testDir, 'test.md'), destDir);
+        const destFile = path.join(destDir, 'test.md');
+        const exists = await fs.access(destFile).then(() => true).catch(() => false);
+        expect(exists).toBe(true);
+        // 原文件仍然存在
+        const originalExists = await fs.access(path.join(testDir, 'test.md')).then(() => true).catch(() => false);
+        expect(originalExists).toBe(true);
+        // 内容应一致
+        const originalContent = await fs.readFile(path.join(testDir, 'test.md'), 'utf-8');
+        const copiedContent = await fs.readFile(destFile, 'utf-8');
+        expect(copiedContent).toBe(originalContent);
+      } finally {
+        await fs.rm(destDir, { recursive: true, force: true }).catch(() => {});
+      }
+    });
+
+    it('应该递归复制目录', async () => {
+      const destDir = await fs.mkdtemp(path.join(os.tmpdir(), 'smart-note-copy-'));
+      try {
+        await copyItem(path.join(testDir, 'subfolder'), destDir);
+        const destFolder = path.join(destDir, 'subfolder');
+        const exists = await fs.access(destFolder).then(() => true).catch(() => false);
+        expect(exists).toBe(true);
+        // 子文件应存在
+        const childExists = await fs.access(path.join(destFolder, 'note1.md')).then(() => true).catch(() => false);
+        expect(childExists).toBe(true);
+      } finally {
+        await fs.rm(destDir, { recursive: true, force: true }).catch(() => {});
+      }
+    });
+
+    it('名称冲突时应追加 副本 后缀', async () => {
+      const destDir = await fs.mkdtemp(path.join(os.tmpdir(), 'smart-note-copy-'));
+      try {
+        // 先在目标目录创建一个同名文件
+        await fs.writeFile(path.join(destDir, 'test.md'), '# 已有文件', 'utf-8');
+        await copyItem(path.join(testDir, 'test.md'), destDir);
+        // 应生成带副本后缀的文件
+        const copyExists = await fs.access(path.join(destDir, 'test - 副本.md')).then(() => true).catch(() => false);
+        expect(copyExists).toBe(true);
+        // 原目标文件仍存在
+        const existingExists = await fs.access(path.join(destDir, 'test.md')).then(() => true).catch(() => false);
+        expect(existingExists).toBe(true);
+      } finally {
+        await fs.rm(destDir, { recursive: true, force: true }).catch(() => {});
+      }
+    });
+
+    it('源路径不存在时应抛出错误', async () => {
+      const destDir = await fs.mkdtemp(path.join(os.tmpdir(), 'smart-note-copy-'));
+      try {
+        await expect(copyItem(path.join(testDir, 'nonexistent.md'), destDir)).rejects.toThrow();
+      } finally {
+        await fs.rm(destDir, { recursive: true, force: true }).catch(() => {});
+      }
     });
   });
 });

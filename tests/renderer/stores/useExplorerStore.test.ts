@@ -73,4 +73,27 @@ describe('useExplorerStore', () => {
     // 原始 Set 不应被修改
     expect(originalSet.has('/test/folder')).toBe(false);
   });
+
+  describe('clipboardPath', () => {
+    it('clipboardPath 初始为 null', () => {
+      expect(useExplorerStore.getState().clipboardPath).toBeNull();
+    });
+
+    it('setClipboardPath 应该存储路径', () => {
+      useExplorerStore.getState().setClipboardPath('/ws/note.md');
+      expect(useExplorerStore.getState().clipboardPath).toBe('/ws/note.md');
+    });
+
+    it('setClipboardPath 应该能清除路径', () => {
+      useExplorerStore.getState().setClipboardPath('/ws/note.md');
+      useExplorerStore.getState().setClipboardPath(null);
+      expect(useExplorerStore.getState().clipboardPath).toBeNull();
+    });
+
+    it('resetExplorerStore 应该清除 clipboardPath', () => {
+      useExplorerStore.getState().setClipboardPath('/ws/note.md');
+      resetExplorerStore();
+      expect(useExplorerStore.getState().clipboardPath).toBeNull();
+    });
+  });
 });

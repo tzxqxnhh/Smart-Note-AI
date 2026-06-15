@@ -16,6 +16,9 @@ export const IPC_CHANNELS = {
   DELETE: 'fs:delete',
   TRASH_ITEM: 'fs:trash',
 
+  // 文件复制
+  FS_COPY: 'fs:copy',
+
   // 搜索
   SEARCH: 'search:query',
 

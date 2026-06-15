@@ -1,4 +1,4 @@
-import { Save, Eye, FileText, Columns2 } from 'lucide-react';
+import { Save, Eye, FileText, Columns2, Search } from 'lucide-react';
 import type { ViewMode } from '@shared/types';
 
 interface EditorToolbarProps {
@@ -7,9 +7,10 @@ interface EditorToolbarProps {
   wordCount: number;
   onSave: () => void;
   onToggleViewMode: () => void;
+  onSearchOpen: () => void;
 }
 
-export function EditorToolbar({ viewMode, isDirty, wordCount, onSave, onToggleViewMode }: EditorToolbarProps) {
+export function EditorToolbar({ viewMode, isDirty, wordCount, onSave, onToggleViewMode, onSearchOpen }: EditorToolbarProps) {
   const viewModeLabel: Record<ViewMode, string> = {
     edit: '编辑',
     preview: '预览',
@@ -42,6 +43,13 @@ export function EditorToolbar({ viewMode, isDirty, wordCount, onSave, onToggleVi
         <span className="text-xs">{viewModeLabel[viewMode]}</span>
       </button>
       <div className="flex-1" />
+      <button
+        className="flex items-center gap-1 px-2 py-1 text-sm text-gray-300 hover:bg-gray-700 rounded"
+        onClick={onSearchOpen}
+        title="搜索 (Ctrl+Shift+F)"
+      >
+        <Search size={14} />
+      </button>
       <span className="text-xs text-gray-500">{wordCount} 字</span>
     </div>
   );

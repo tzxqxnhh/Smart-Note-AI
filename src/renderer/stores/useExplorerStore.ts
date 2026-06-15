@@ -9,12 +9,16 @@ interface ExplorerState {
   expandedPaths: Set<string>;
   isLoading: boolean;
 
+  // 复制/粘贴剪切板
+  clipboardPath: string | null;
+
   // 操作
   setRootPath: (path: string | null) => void;
   setTree: (tree: FileNode[]) => void;
   selectNode: (path: string | null) => void;
   toggleExpand: (path: string) => void;
   setLoading: (loading: boolean) => void;
+  setClipboardPath: (path: string | null) => void;
 }
 
 export const useExplorerStore = create<ExplorerState>((set) => ({
@@ -24,6 +28,7 @@ export const useExplorerStore = create<ExplorerState>((set) => ({
   selectedPath: null,
   expandedPaths: new Set(),
   isLoading: false,
+  clipboardPath: null,
 
   setRootPath: (rootPath) => set({ rootPath }),
 
@@ -43,6 +48,8 @@ export const useExplorerStore = create<ExplorerState>((set) => ({
     }),
 
   setLoading: (isLoading) => set({ isLoading }),
+
+  setClipboardPath: (clipboardPath) => set({ clipboardPath }),
 }));
 
 // 用于测试的 reset 函数
@@ -53,5 +60,6 @@ export function resetExplorerStore(): void {
     selectedPath: null,
     expandedPaths: new Set(),
     isLoading: false,
+    clipboardPath: null,
   });
 }

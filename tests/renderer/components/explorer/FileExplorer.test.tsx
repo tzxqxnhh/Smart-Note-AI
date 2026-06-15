@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { useExplorerStore, resetExplorerStore } from '../../../../src/renderer/stores/useExplorerStore';
 
 // Mock IPC 客户端
@@ -14,6 +14,7 @@ vi.mock('../../../../src/renderer/lib/ipc-client', () => ({
   rename: vi.fn().mockResolvedValue(undefined),
   deleteItem: vi.fn().mockResolvedValue(undefined),
   trashItem: vi.fn().mockResolvedValue(undefined),
+  copyItem: vi.fn().mockResolvedValue(undefined),
   searchFiles: vi.fn().mockResolvedValue([]),
 }));
 
@@ -172,5 +173,57 @@ describe('FileExplorer', () => {
     // rootPath 应为 null，显示空状态界面
     expect(useExplorerStore.getState().rootPath).toBeNull();
     expect(screen.getByText('选择文件夹')).toBeInTheDocument();
+  });
+
+  it('复制文件应将路径存入 clipboardPath', async () => {
+    useExplorerStore.setState({
+      rootPath: '/ws',
+      tree: [
+        { name: 'note.md', path: '/ws/note.md', isDirectory: false },
+      ],
+    });
+
+    render(<FileExplorer />);
+
+    // 右键文件节点
+    const fileNode = screen.getByTestId('tree-node-note.md');
+    fireEvent.contextMenu(fileNode);
+
+    // 点击复制菜单项
+    const copyButton = await screen.findByText('复制');
+    fireEvent.click(copyButton);
+
+    // clipboardPath 应被设置为文件路径
+    expect(useExplorerStore.getState().clipboardPath).toBe('/ws/note.md');
+  });
+
+  it('粘贴时应调用 copyItem 并清除剪切板', async () => {
+    const { copyItem: mockCopy } = await import('../../../../src/renderer/lib/ipc-client');
+
+    // 预设剪切板中有内容
+    useExplorerStore.setState({
+      rootPath: '/ws',
+      clipboardPath: '/ws/source.md',
+      tree: [
+        { name: 'docs', path: '/ws/docs', isDirectory: true, children: [] },
+      ],
+    });
+
+    render(<FileExplorer />);
+
+    // 右键文件夹节点
+    const folderNode = screen.getByTestId('tree-node-docs');
+    fireEvent.contextMenu(folderNode);
+
+    // 点击粘贴菜单项
+    const pasteButton = await screen.findByText('粘贴');
+    fireEvent.click(pasteButton);
+
+    // copyItem 应被调用
+    expect(mockCopy).toHaveBeenCalledWith('/ws/source.md', '/ws/docs');
+    // 等待异步操作完成，剪切板应被清除
+    await waitFor(() => {
+      expect(useExplorerStore.getState().clipboardPath).toBeNull();
+    });
   });
 });

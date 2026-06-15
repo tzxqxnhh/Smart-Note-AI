@@ -85,3 +85,34 @@ export async function renameItem(oldPath: string, newName: string): Promise<void
 export async function deleteItemFromDisk(itemPath: string): Promise<void> {
   await fs.rm(itemPath, { recursive: true, force: true });
 }
+
+/**
+ * 检查路径是否存在
+ */
+async function pathExists(checkPath: string): Promise<boolean> {
+  try {
+    await fs.access(checkPath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * 复制文件或目录到目标目录
+ * 如果目标已存在同名文件，自动追加 " - 副本" 后缀
+ * 纯函数，不依赖 Electron
+ */
+export async function copyItem(sourcePath: string, destDir: string): Promise<void> {
+  const name = path.basename(sourcePath);
+  let destPath = path.join(destDir, name);
+
+  // 处理名称冲突：追加 " - 副本" 后缀
+  if (await pathExists(destPath)) {
+    const ext = path.extname(name);
+    const baseName = ext ? name.slice(0, -ext.length) : name;
+    destPath = path.join(destDir, `${baseName} - 副本${ext}`);
+  }
+
+  await fs.cp(sourcePath, destPath, { recursive: true });
+}

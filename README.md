@@ -196,7 +196,7 @@ npm run preview
 ## 后续计划
 
 - [ ] 实现 RAG 完整流水线（Markdown 分块 → 嵌入 → ChromaDB 索引 → 检索）
-- [ ] 接入 Ollama 本地大模型
+- [ ] 接入 DEEPSEEK 模型
 - [ ] 实现 Agent 功能（总结、扩写、格式化、思维导图、RAG 问答）
 - [ ] 引用跳转与来源标注
 - [ ] 窗口状态持久化

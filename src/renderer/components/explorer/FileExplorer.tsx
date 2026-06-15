@@ -15,11 +15,13 @@ export function FileExplorer() {
     selectedPath,
     expandedPaths,
     isLoading,
+    clipboardPath,
     setRootPath,
     setTree,
     selectNode,
     toggleExpand,
     setLoading,
+    setClipboardPath,
   } = useExplorerStore();
 
   const { menuState, menuRef, showMenu, hideMenu } = useContextMenu();
@@ -125,6 +127,26 @@ export function FileExplorer() {
     if (!menuState.targetPath) return;
     // 显示确认对话框
     setDeleteConfirmPath(menuState.targetPath);
+  };
+
+  // 复制文件/文件夹路径到剪切板
+  const handleCopy = () => {
+    hideMenu();
+    if (!menuState.targetPath) return;
+    setClipboardPath(menuState.targetPath);
+  };
+
+  // 粘贴复制的内容到当前右键目标目录
+  const handlePaste = async () => {
+    hideMenu();
+    if (!clipboardPath || !menuState.targetPath) return;
+    try {
+      await ipcClient.copyItem(clipboardPath, menuState.targetPath);
+      setClipboardPath(null);
+      if (rootPath) loadTree(rootPath);
+    } catch (err) {
+      console.error('粘贴失败:', err);
+    }
   };
 
   // 确认删除：优先使用系统回收站，降级到永久删除
@@ -261,8 +283,11 @@ export function FileExplorer() {
         y={menuState.y}
         isVisible={menuState.isVisible}
         isDirectory={menuState.isDirectory}
+        clipboardPath={clipboardPath}
         onCreateFile={handleCreateFile}
         onCreateFolder={handleCreateFolder}
+        onCopy={handleCopy}
+        onPaste={handlePaste}
         onRename={handleRename}
         onDelete={handleDelete}
       />

@@ -8,10 +8,11 @@ import {
   createNewDirectory,
   renameItem,
   deleteItemFromDisk,
+  copyItem,
 } from '../services/file-ops';
 
 // 重新导出纯函数供测试使用
-export { listDirectory, readFileContent, writeFileContent, createEmptyFile, createNewDirectory, renameItem, deleteItemFromDisk };
+export { listDirectory, readFileContent, writeFileContent, createEmptyFile, createNewDirectory, renameItem, deleteItemFromDisk, copyItem };
 
 // 别名，保持原有 API 名称兼容
 export const readFile = readFileContent;
@@ -56,5 +57,10 @@ export function setupFileSystemHandlers(): void {
   // 放入系统回收站（仅在 Electron 主进程中可用）
   ipcMain.handle(IPC_CHANNELS.TRASH_ITEM, async (_event, itemPath: string) => {
     await shell.trashItem(itemPath);
+  });
+
+  // 复制文件或目录
+  ipcMain.handle(IPC_CHANNELS.FS_COPY, async (_event, sourcePath: string, destDir: string) => {
+    return copyItem(sourcePath, destDir);
   });
 }

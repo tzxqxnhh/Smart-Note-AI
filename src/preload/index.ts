@@ -26,6 +26,8 @@ const electronAPI = {
     ipcRenderer.invoke(IPC_CHANNELS.DELETE, itemPath),
   trashItem: (itemPath: string): Promise<void> =>
     ipcRenderer.invoke(IPC_CHANNELS.TRASH_ITEM, itemPath),
+  copyItem: (sourcePath: string, destDir: string): Promise<void> =>
+    ipcRenderer.invoke(IPC_CHANNELS.FS_COPY, sourcePath, destDir),
 
   // 搜索
   searchFiles: (query: string, rootPath: string) =>
