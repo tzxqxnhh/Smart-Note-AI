@@ -16,6 +16,7 @@ export function createMockElectronAPI() {
     copyItem: vi.fn().mockResolvedValue(undefined),
     searchFiles: vi.fn().mockResolvedValue([]),
     ragIndexAll: vi.fn().mockResolvedValue({ fileCount: 0, chunkCount: 0 }),
+    ragIndexFile: vi.fn().mockResolvedValue(undefined),
     ragQuery: vi.fn().mockResolvedValue({ content: '', citations: [] }),
     ragGetStatus: vi.fn().mockResolvedValue(null),
     ragResetIndex: vi.fn().mockResolvedValue(undefined),

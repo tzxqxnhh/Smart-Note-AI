@@ -3,7 +3,7 @@
  * 对 window.electronAPI 做类型化包装，统一错误处理
  */
 
-import type { FileNode, SearchResult, RagResponse, IndexStats, ChatMessage } from '@shared/types';
+import type { FileNode, SearchResult, RagResponse, IndexStats, ChatMessage, ChunkerSettings } from '@shared/types';
 
 function getAPI() {
   if (!window.electronAPI) {
@@ -75,8 +75,12 @@ export async function ragIndexAll(workspacePath: string) {
   return wrap(getAPI().ragIndexAll(workspacePath));
 }
 
-export async function ragQuery(query: string) {
-  return wrap(getAPI().ragQuery(query));
+export async function ragIndexFile(filePath: string, settings?: ChunkerSettings) {
+  return wrap(getAPI().ragIndexFile(filePath, settings));
+}
+
+export async function ragQuery(query: string, workspacePath: string) {
+  return wrap(getAPI().ragQuery(query, workspacePath));
 }
 
 export async function ragGetStatus() {

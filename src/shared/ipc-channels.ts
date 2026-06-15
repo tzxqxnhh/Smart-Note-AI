@@ -27,6 +27,7 @@ export const IPC_CHANNELS = {
 
   // RAG 操作
   RAG_INDEX_ALL: 'rag:index-all',
+  RAG_INDEX_FILE: 'rag:index-file',
   RAG_QUERY: 'rag:query',
   RAG_GET_STATUS: 'rag:get-status',
   RAG_RESET_INDEX: 'rag:reset-index',

@@ -1,4 +1,4 @@
-import { Save, Eye, FileText, Columns2, Search } from 'lucide-react';
+import { Save, Eye, FileText, Columns2, Search, BrainCircuit } from 'lucide-react';
 import type { ViewMode } from '@shared/types';
 
 interface EditorToolbarProps {
@@ -8,9 +8,10 @@ interface EditorToolbarProps {
   onSave: () => void;
   onToggleViewMode: () => void;
   onSearchOpen: () => void;
+  onRagOpen: () => void;
 }
 
-export function EditorToolbar({ viewMode, isDirty, wordCount, onSave, onToggleViewMode, onSearchOpen }: EditorToolbarProps) {
+export function EditorToolbar({ viewMode, isDirty, wordCount, onSave, onToggleViewMode, onSearchOpen, onRagOpen }: EditorToolbarProps) {
   const viewModeLabel: Record<ViewMode, string> = {
     edit: '编辑',
     preview: '预览',
@@ -43,6 +44,13 @@ export function EditorToolbar({ viewMode, isDirty, wordCount, onSave, onToggleVi
         <span className="text-xs">{viewModeLabel[viewMode]}</span>
       </button>
       <div className="flex-1" />
+      <button
+        className="flex items-center gap-1 px-2 py-1 text-sm text-gray-300 hover:bg-gray-700 rounded"
+        onClick={onRagOpen}
+        title="RAG 文本切分"
+      >
+        <BrainCircuit size={14} />
+      </button>
       <button
         className="flex items-center gap-1 px-2 py-1 text-sm text-gray-300 hover:bg-gray-700 rounded"
         onClick={onSearchOpen}

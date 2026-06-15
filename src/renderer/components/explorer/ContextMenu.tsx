@@ -1,5 +1,5 @@
 import { forwardRef } from 'react';
-import { FilePlus, FolderPlus, Pencil, Trash2, Copy, ClipboardPaste } from 'lucide-react';
+import { FilePlus, FolderPlus, Pencil, Trash2, Copy, ClipboardPaste, Scissors } from 'lucide-react';
 
 interface ContextMenuProps {
   x: number;
@@ -7,16 +7,18 @@ interface ContextMenuProps {
   isVisible: boolean;
   isDirectory: boolean;
   clipboardPath: string | null;
+  showChunkItem: boolean;
   onCreateFile: () => void;
   onCreateFolder: () => void;
   onCopy: () => void;
   onPaste: () => void;
   onRename: () => void;
   onDelete: () => void;
+  onChunk: () => void;
 }
 
 export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
-  ({ x, y, isVisible, isDirectory, clipboardPath, onCreateFile, onCreateFolder, onCopy, onPaste, onRename, onDelete }, ref) => {
+  ({ x, y, isVisible, isDirectory, clipboardPath, showChunkItem, onCreateFile, onCreateFolder, onCopy, onPaste, onRename, onDelete, onChunk }, ref) => {
     if (!isVisible) return null;
 
     return (
@@ -68,6 +70,18 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
           </>
         ) : (
           <>
+            {showChunkItem && (
+              <>
+                <button
+                  className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700"
+                  onClick={onChunk}
+                >
+                  <Scissors size={14} />
+                  文本切分
+                </button>
+                <div className="border-t border-gray-700 my-1" />
+              </>
+            )}
             <button
               className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700"
               onClick={onCopy}

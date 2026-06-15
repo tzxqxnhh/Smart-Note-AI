@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { FolderOpen, RefreshCw, X } from 'lucide-react';
 import { useExplorerStore } from '../../stores/useExplorerStore';
 import { useEditorStore } from '../../stores/useEditorStore';
+import { useRagSettingsStore } from '../../stores/useRagSettingsStore';
 import { useContextMenu } from '../../hooks/useContextMenu';
 import { TreeNode } from './TreeNode';
 import { ContextMenu } from './ContextMenu';
@@ -76,6 +77,7 @@ export function FileExplorer() {
 
   // 点击文件节点
   const openFile = useEditorStore((s) => s.openFile);
+  const openRagSettings = useRagSettingsStore((s) => s.openSettings);
 
   // 点击文件节点
   const handleNodeSelect = (node: import('@shared/types').FileNode) => {
@@ -146,6 +148,14 @@ export function FileExplorer() {
       if (rootPath) loadTree(rootPath);
     } catch (err) {
       console.error('粘贴失败:', err);
+    }
+  };
+
+  // 文本切分：打开 RAG 设置
+  const handleChunk = () => {
+    hideMenu();
+    if (menuState.targetPath) {
+      openRagSettings(menuState.targetPath);
     }
   };
 
@@ -284,12 +294,18 @@ export function FileExplorer() {
         isVisible={menuState.isVisible}
         isDirectory={menuState.isDirectory}
         clipboardPath={clipboardPath}
+        showChunkItem={
+          !menuState.isDirectory &&
+          menuState.targetName !== null &&
+          menuState.targetName.endsWith('.md')
+        }
         onCreateFile={handleCreateFile}
         onCreateFolder={handleCreateFolder}
         onCopy={handleCopy}
         onPaste={handlePaste}
         onRename={handleRename}
         onDelete={handleDelete}
+        onChunk={handleChunk}
       />
 
       {/* 创建输入弹窗 */}

@@ -1,10 +1,11 @@
 import { useEditorStore } from '../../stores/useEditorStore';
 import { useSearchStore } from '../../stores/useSearchStore';
+import { useRagSettingsStore } from '../../stores/useRagSettingsStore';
 import { EditorTabs } from './EditorTabs';
 import { EditorToolbar } from './EditorToolbar';
 import { CodeEditor } from './CodeEditor';
 import { MarkdownPreview } from './MarkdownPreview';
-import { Search } from 'lucide-react';
+import { Search, BrainCircuit } from 'lucide-react';
 
 export function EditorContainer() {
   const tabs = useEditorStore((s) => s.tabs);
@@ -18,6 +19,16 @@ export function EditorContainer() {
   const toggleViewMode = useEditorStore((s) => s.toggleViewMode);
 
   const openSearch = useSearchStore((s) => s.openSearch);
+  const openRagSettings = useRagSettingsStore((s) => s.openSettings);
+
+  const handleRagOpen = () => {
+    if (activeTabId) {
+      const tab = tabs.find((t) => t.id === activeTabId);
+      if (tab) {
+        openRagSettings(tab.filePath);
+      }
+    }
+  };
 
   const activeTab = tabs.find((t) => t.id === activeTabId);
   const activeContent = activeTab ? (contents[activeTab.filePath] ?? '') : '';
@@ -33,8 +44,15 @@ export function EditorContainer() {
   if (!activeTab) {
     return (
       <div className="h-full flex flex-col" data-testid="center-panel">
-        {/* 即使没有打开文件也显示搜索按钮 */}
-        <div className="flex items-center justify-end px-3 py-1.5 border-b border-gray-700 bg-gray-850 shrink-0">
+        {/* 即使没有打开文件也显示搜索和 RAG 按钮 */}
+        <div className="flex items-center justify-end gap-1 px-3 py-1.5 border-b border-gray-700 bg-gray-850 shrink-0">
+          <button
+            className="flex items-center gap-1 px-2 py-1 text-sm text-gray-300 hover:bg-gray-700 rounded"
+            onClick={handleRagOpen}
+            title="RAG 文本切分"
+          >
+            <BrainCircuit size={14} />
+          </button>
           <button
             className="flex items-center gap-1 px-2 py-1 text-sm text-gray-300 hover:bg-gray-700 rounded"
             onClick={openSearch}
@@ -68,6 +86,7 @@ export function EditorContainer() {
         onSave={saveCurrentFile}
         onToggleViewMode={toggleViewMode}
         onSearchOpen={openSearch}
+        onRagOpen={handleRagOpen}
       />
 
       {/* 编辑/预览区域 */}

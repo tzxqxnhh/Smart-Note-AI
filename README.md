@@ -18,27 +18,28 @@
 | 测试 | Vitest + Testing Library | 3 / 16 |
 | 样式 | Tailwind CSS | 4 |
 | 图标 | lucide-react | 0.500 |
-| 嵌入模型 | Transformers.js (all-MiniLM-L6-v2) | 4 |
+| Markdown 分块 | remark (AST 解析) | 15 |
+| 嵌入模型 | SiliconFlow API (Qwen/Qwen3-Embedding-8B) | - |
 | 向量存储 | ChromaDB | 3.4 |
-| LLM | Ollama（主）+ Anthropic（可选） | - |
+| LLM | DEEPSEEK / Ollama | - |
 
 ## 功能
 
 ### 已完成
 
 - **三栏可拖拽布局** — 左侧资源管理器 + 中间编辑器 + 右侧 AI 面板，宽度自由调整
-- **文件资源管理器** — 树形展示、新建/重命名/删除、右键菜单
+- **文件资源管理器** — 树形展示、新建/重命名/删除、右键菜单（含"文本切分"入口）
 - **多 Tab Markdown 编辑器** — CodeMirror 6 语法高亮、GFM 预览（表格/任务列表/代码块）、编辑/预览/双栏模式切换
 - **自动保存** — 编辑内容 2 秒防抖自动保存
 - **全局搜索** — 文件名 + 内容全文搜索，结果高亮，点击跳转
 - **键盘快捷键** — Ctrl+Shift+F 搜索、Ctrl+S 保存、Ctrl+W 关闭 Tab、Ctrl+\ 切换面板
 - **文件监控** — 自动检测工作空间文件变更
+- **RAG 流水线** — Markdown 分块（remark AST）→ SiliconFlow 嵌入 → ChromaDB 向量索引，支持单文件切分与参数配置
 
-### 开发中（框架已搭建）
+### 开发中
 
-- **RAG 流水线** — Markdown 分块 → Transformers.js 文本嵌入 → ChromaDB 向量检索
 - **Agent 面板** — 预设操作（总结/扩写/格式化/思维导图/问答）
-- **LLM 集成** — Ollama 本地大模型调用
+- **LLM 集成** — DEEPSEEK 大模型调用
 
 ## 项目结构
 
@@ -46,22 +47,22 @@
 demo_smart_note/
 ├── src/
 │   ├── main/                    # Electron 主进程
-│   │   ├── index.ts             # 应用入口、窗口创建
+│   │   ├── index.ts             # 应用入口、窗口创建、.env 加载
 │   │   ├── ipc/                 # IPC 处理器
 │   │   │   ├── index.ts         # 注册所有 Handler
 │   │   │   ├── file-system.ts   # 文件系统操作
 │   │   │   ├── search.ts        # 搜索
 │   │   │   ├── workspace.ts     # 工作空间选择
-│   │   │   ├── rag.ts           # RAG 处理器（框架）
+│   │   │   ├── rag.ts           # RAG 处理器
 │   │   │   └── llm.ts           # LLM 处理器（框架）
 │   │   └── services/            # 纯函数服务层（可独立测试）
 │   │       ├── file-ops.ts      # 文件操作（list/read/write/crud）
 │   │       ├── file-watcher.ts  # chokidar 文件监控
 │   │       ├── search-ops.ts    # 搜索逻辑
-│   │       ├── chunker.ts       # Markdown 分块器（框架）
-│   │       ├── embedder.ts      # 文本嵌入（框架）
-│   │       ├── chroma-manager.ts # ChromaDB 管理（框架）
-│   │       ├── rag-pipeline.ts  # RAG 编排（框架）
+│   │       ├── chunker.ts       # Markdown 分块器（remark AST）
+│   │       ├── embedder.ts      # SiliconFlow 嵌入 API 封装
+│   │       ├── chroma-manager.ts # ChromaDB 向量存储管理
+│   │       ├── rag-pipeline.ts  # RAG 编排（分块→嵌入→索引→检索）
 │   │       └── llm-client.ts    # LLM 客户端抽象（框架）
 │   ├── preload/
 │   │   └── index.ts             # contextBridge API 暴露
@@ -73,6 +74,7 @@ demo_smart_note/
 │   │   │   ├── explorer/        # 文件浏览器（FileExplorer/TreeNode/ContextMenu）
 │   │   │   ├── editor/          # 编辑器（CodeEditor/MarkdownPreview/Tabs/Toolbar）
 │   │   │   ├── search/          # 搜索（SearchBar/SearchResults/HighlightText）
+│   │   │   ├── rag/             # RAG（RagSettingsPanel）
 │   │   │   ├── agent/           # AI 面板（AgentPanel/ChatMessage/ChatInput/PresetButtons）
 │   │   │   └── common/          # 通用组件（ConfirmDialog）
 │   │   ├── stores/              # Zustand 状态管理
@@ -80,6 +82,7 @@ demo_smart_note/
 │   │   │   ├── useExplorerStore.ts
 │   │   │   ├── useEditorStore.ts
 │   │   │   ├── useSearchStore.ts
+│   │   │   ├── useRagSettingsStore.ts
 │   │   │   └── useAgentStore.ts
 │   │   ├── hooks/               # 自定义 Hooks
 │   │   │   ├── useAutoSave.ts
@@ -93,13 +96,33 @@ demo_smart_note/
 │   └── shared/                  # 主进程/渲染进程共享
 │       ├── ipc-channels.ts      # IPC 通道名称常量
 │       └── types.ts             # 共享类型定义
-├── tests/                       # 测试文件（59 个用例，9 个文件）
+├── tests/                       # 测试文件（142 个用例，17 个文件）
 │   ├── setup.ts                 # jsdom polyfill + jest-dom 扩展
 │   ├── mocks/                   # Electron API Mock
 │   ├── main/                    # 主进程测试（Node 环境）
+│   │   ├── chunker.test.ts
+│   │   ├── embedder.test.ts
+│   │   ├── chroma-manager.test.ts
+│   │   ├── rag-pipeline.test.ts
+│   │   ├── file-system.test.ts
+│   │   └── smoke.test.ts
 │   └── renderer/                # 渲染进程测试（jsdom 环境）
 │       ├── stores/
+│       │   ├── useLayoutStore.test.ts
+│       │   ├── useExplorerStore.test.ts
+│       │   ├── useEditorStore.test.ts
+│       │   └── useRagSettingsStore.test.ts
 │       └── components/
+│           ├── explorer/
+│           │   ├── FileExplorer.test.tsx
+│           │   ├── TreeNode.test.tsx
+│           │   └── ContextMenu.test.tsx
+│           ├── editor/
+│           │   ├── EditorToolbar.test.tsx
+│           │   └── MarkdownPreview.test.tsx
+│           └── layout/
+│               └── MainLayout.test.tsx
+├── .env                          # 环境变量配置（SILICONFLOW_API_KEY）
 ├── electron.vite.config.ts
 ├── vitest.config.ts
 ├── tsconfig.json / tsconfig.node.json / tsconfig.web.json
@@ -112,6 +135,7 @@ demo_smart_note/
 
 - Node.js >= 22
 - npm >= 10
+- ChromaDB 服务端（用于 RAG 向量存储）
 
 ### 安装
 
@@ -126,6 +150,29 @@ npm install
 export ELECTRON_MIRROR="https://npmmirror.com/mirrors/electron/"
 ```
 
+### 环境变量配置
+
+复制 `.env` 文件并按需填写：
+
+```bash
+# 硅基流动 API Key（用于文本嵌入模型）
+# 注册获取: https://siliconflow.cn
+SILICONFLOW_API_KEY=sk-xxxxxxxxxxxxx
+```
+
+也可以直接在系统环境变量中设置 `SILICONFLOW_API_KEY`，应用会自动读取。
+
+### 启动 ChromaDB（RAG 功能需要）
+
+```bash
+# 使用 pip 安装并启动
+pip install chromadb
+chroma run --path ./chroma_data
+
+# 或使用 Docker
+docker run -d -p 8000:8000 -v ./chroma_data:/chroma/chroma chromadb/chroma
+```
+
 ### 开发
 
 ```bash
@@ -136,7 +183,7 @@ npm run dev
 ### 运行测试
 
 ```bash
-# 运行所有测试
+# 运行所有测试（142 个用例）
 npm test
 
 # 仅运行主进程测试
@@ -180,8 +227,24 @@ npm run preview
 
 主进程采用两层架构，将纯逻辑与 Electron API 分离，确保代码可测试：
 
-- **`src/main/services/*.ts`** — 纯函数，不依赖 Electron，可被 Vitest 直接测试
+- **`src/main/services/*.ts`** — 纯函数/类，不依赖 Electron，可被 Vitest 直接测试
 - **`src/main/ipc/*.ts`** — IPC Handler 注册，调用 services 层
+
+### RAG 架构
+
+```
+┌──────────────┐    ┌──────────────┐    ┌──────────────┐
+│   Chunker    │───►│   Embedder   │───►│ ChromaManager│
+│ (remark AST) │    │ (SiliconFlow)│    │ (ChromaDB)   │
+└──────────────┘    └──────────────┘    └──────────────┘
+       ▲                   ▲                   ▲
+       │                   │                   │
+       └───────────────────┼───────────────────┘
+                           │
+                    ┌──────┴──────┐
+                    │ RagPipeline │  (编排层)
+                    └─────────────┘
+```
 
 ### 状态管理
 
@@ -191,11 +254,11 @@ npm run preview
 - `useExplorerStore` — 文件树、选中路径
 - `useEditorStore` — 多 Tab、编辑内容、视图模式
 - `useSearchStore` — 搜索查询、结果、状态
+- `useRagSettingsStore` — RAG 切分设置面板状态、索引操作
 - `useAgentStore` — 对话消息、处理状态
 
 ## 后续计划
 
-- [ ] 实现 RAG 完整流水线（Markdown 分块 → 嵌入 → ChromaDB 索引 → 检索）
 - [ ] 接入 DEEPSEEK 模型
 - [ ] 实现 Agent 功能（总结、扩写、格式化、思维导图、RAG 问答）
 - [ ] 引用跳转与来源标注

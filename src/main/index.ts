@@ -1,7 +1,48 @@
 import { app, BrowserWindow, shell } from 'electron';
-import { join } from 'path';
+import { join, resolve } from 'path';
+import { readFileSync } from 'fs';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import { setupIPC } from './ipc/index';
+
+/**
+ * 加载 .env 文件中的环境变量
+ * 必须在其他模块导入之前加载，确保服务模块能读取到环境变量
+ */
+function loadEnvFile(): void {
+  try {
+    const envPath = resolve(__dirname, '../../.env');
+    const content = readFileSync(envPath, 'utf-8');
+    for (let line of content.split('\n')) {
+      line = line.trim();
+      // 跳过空行和注释行
+      if (!line || line.startsWith('#')) continue;
+      const eqIndex = line.indexOf('=');
+      if (eqIndex === -1) continue;
+      const key = line.slice(0, eqIndex).trim();
+      let value = line.slice(eqIndex + 1).trim();
+      // 移除引号包裹
+      if ((value.startsWith('"') && value.endsWith('"')) ||
+          (value.startsWith("'") && value.endsWith("'"))) {
+        value = value.slice(1, -1);
+      }
+      if (key && !process.env[key]) {
+        process.env[key] = value;
+      }
+    }
+  } catch {
+    // .env 文件不存在时静默跳过
+  }
+}
+
+// 在模块加载后立即加载 .env，确保后续服务初始化时可用
+loadEnvFile();
+
+// 禁用 GPU 硬件加速，消除 Windows 上 GPU 虚拟化报错
+// （这是一个笔记应用，不需要 GPU 渲染）
+app.disableHardwareAcceleration();
+app.commandLine.appendSwitch('disable-gpu');
+app.commandLine.appendSwitch('disable-gpu-sandbox');
+app.commandLine.appendSwitch('disable-direct-composition');
 
 function createWindow(): void {
   // 创建浏览器窗口
@@ -34,12 +75,6 @@ function createWindow(): void {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'));
   }
 }
-
-// 禁用 GPU 硬件加速并关闭 GPU 沙箱，解决 Windows 上 GPU 进程崩溃问题
-app.disableHardwareAcceleration();
-app.commandLine.appendSwitch('disable-gpu-sandbox');
-app.commandLine.appendSwitch('no-sandbox');
-app.commandLine.appendSwitch('disable-software-rasterizer');
 
 // 应用准备就绪后创建窗口
 app.whenReady().then(() => {

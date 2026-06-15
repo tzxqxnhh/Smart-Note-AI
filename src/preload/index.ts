@@ -36,8 +36,10 @@ const electronAPI = {
   // RAG 操作
   ragIndexAll: (workspacePath: string) =>
     ipcRenderer.invoke(IPC_CHANNELS.RAG_INDEX_ALL, workspacePath),
-  ragQuery: (query: string) =>
-    ipcRenderer.invoke(IPC_CHANNELS.RAG_QUERY, query),
+  ragIndexFile: (filePath: string, settings?: import('../shared/types').ChunkerSettings) =>
+    ipcRenderer.invoke(IPC_CHANNELS.RAG_INDEX_FILE, filePath, settings),
+  ragQuery: (query: string, workspacePath: string) =>
+    ipcRenderer.invoke(IPC_CHANNELS.RAG_QUERY, query, workspacePath),
   ragGetStatus: () =>
     ipcRenderer.invoke(IPC_CHANNELS.RAG_GET_STATUS),
   ragResetIndex: () =>

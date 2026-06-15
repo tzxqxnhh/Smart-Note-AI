@@ -49,6 +49,13 @@ export interface ChunkMetadata {
   totalChunks: number;
 }
 
+// RAG 文本切分配置
+export interface ChunkerSettings {
+  maxChunkSize: number;   // 最大切分字符数
+  maxOverlap: number;     // 最大重叠字符数
+  separator: string;      // 分隔符，默认 "##"
+}
+
 // 索引状态
 export interface IndexStats {
   fileCount: number;
