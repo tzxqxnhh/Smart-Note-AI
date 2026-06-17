@@ -1,4 +1,4 @@
-import type { Chunk } from '../../shared/types';
+import type { Chunk, FileChunkGroup, ChunkDetail } from '../../shared/types';
 import { ChromaClient } from 'chromadb';
 import type { CollectionHandle, EmbeddingFunction } from 'chromadb';
 
@@ -55,6 +55,7 @@ export class ChromaManager {
       parentHeading: c.metadata.parentHeading ?? '',
       chunkIndex: c.metadata.chunkIndex,
       totalChunks: c.metadata.totalChunks,
+      storedAt: new Date().toISOString(),
     }));
 
     await this.collection!.upsert({
@@ -131,6 +132,109 @@ export class ChromaManager {
    */
   isConnected(): boolean {
     return this.connected;
+  }
+
+  /**
+   * 列出所有已索引的文件及其切片摘要
+   */
+  async listFileChunks(): Promise<FileChunkGroup[]> {
+    if (!this.connected) {
+      await this.initialize();
+    }
+
+    const result = await this.collection!.get();
+
+    const ids = result.ids ?? [];
+    const documents = result.documents ?? [];
+    const metadatas = (result.metadatas as Array<Record<string, unknown>>) ?? [];
+
+    if (ids.length === 0) {
+      return [];
+    }
+
+    // 按 sourceFile 分组
+    const groupMap = new Map<string, FileChunkGroup>();
+    for (let i = 0; i < ids.length; i++) {
+      const meta = metadatas[i] ?? {};
+      const sourceFile = (meta.sourceFile as string) ?? '';
+      const fileName = sourceFile.replace(/^.*[\\/]/, '');
+
+      if (!groupMap.has(sourceFile)) {
+        groupMap.set(sourceFile, {
+          filePath: sourceFile,
+          fileName,
+          chunkCount: 0,
+          chunks: [],
+        });
+      }
+
+      const group = groupMap.get(sourceFile)!;
+      group.chunkCount++;
+      group.chunks.push({
+        id: ids[i] as string,
+        contentPreview: typeof documents[i] === 'string' ? documents[i].slice(0, 10) : '',
+        storedAt: (meta.storedAt as string) ?? null,
+      });
+    }
+
+    // 按文件名排序
+    return Array.from(groupMap.values()).sort((a, b) =>
+      a.fileName.localeCompare(b.fileName),
+    );
+  }
+
+  /**
+   * 获取单个切片的完整详情
+   */
+  async getChunkDetail(id: string): Promise<ChunkDetail | null> {
+    if (!this.connected) {
+      await this.initialize();
+    }
+
+    const result = await this.collection!.get({ ids: [id] });
+
+    const ids = result.ids ?? [];
+    const documents = result.documents ?? [];
+    const metadatas = (result.metadatas as Array<Record<string, unknown>>) ?? [];
+
+    if (ids.length === 0 || !documents[0]) {
+      return null;
+    }
+
+    const meta = metadatas[0] ?? {};
+    return {
+      id: ids[0] as string,
+      content: documents[0] as string,
+      sourceFile: (meta.sourceFile as string) ?? '',
+      headingText: (meta.headingText as string) ?? '',
+      storedAt: (meta.storedAt as string) ?? null,
+    };
+  }
+
+  /**
+   * 按 ID 列表删除切片
+   */
+  async deleteChunks(ids: string[]): Promise<void> {
+    if (!this.connected) {
+      await this.initialize();
+    }
+
+    if (ids.length === 0) {
+      return;
+    }
+
+    await this.collection!.delete({ ids });
+  }
+
+  /**
+   * 获取向量库中的切片总数
+   */
+  async getChunkCount(): Promise<number> {
+    if (!this.connected) {
+      await this.initialize();
+    }
+
+    return this.collection!.count();
   }
 }
 

@@ -78,7 +78,7 @@ describe('chunkMarkdown', () => {
   });
 
   describe('### 子标题处理', () => {
-    it('### 标题的 parentHeading 是最近的 ## 标题', () => {
+    it('### 标题内容归入父 ## 切片，不独立成块', () => {
       const content = [
         '## 第一章',
         '',
@@ -99,27 +99,24 @@ describe('chunkMarkdown', () => {
 
       const chunks = chunkMarkdown(content, filePath, defaultOptions);
 
-      // 应该有 5 个块：第一章, 1.1, 1.2, 第二章
-      expect(chunks).toHaveLength(4);
+      // separator='##' 时只在 ## 级别分割，### 不作为分割点
+      // 应该有 2 个块：第一章(含 ### 1.1, 1.2) + 第二章
+      expect(chunks).toHaveLength(2);
 
-      // 第一章
+      // 第一章：包含其 ### 子标题内容
       expect(chunks[0].metadata.headingText).toBe('第一章');
       expect(chunks[0].metadata.headingLevel).toBe(2);
-
-      // 小节 1.1 —— parentHeading 是 "第一章"
-      expect(chunks[1].metadata.headingText).toBe('小节 1.1');
-      expect(chunks[1].metadata.headingLevel).toBe(3);
-      expect(chunks[1].metadata.parentHeading).toBe('第一章');
-
-      // 小节 1.2 —— parentHeading 是 "第一章"
-      expect(chunks[2].metadata.headingText).toBe('小节 1.2');
-      expect(chunks[2].metadata.headingLevel).toBe(3);
-      expect(chunks[2].metadata.parentHeading).toBe('第一章');
+      expect(chunks[0].content).toContain('### 小节 1.1');
+      expect(chunks[0].content).toContain('### 小节 1.2');
 
       // 第二章
-      expect(chunks[3].metadata.headingText).toBe('第二章');
-      expect(chunks[3].metadata.headingLevel).toBe(2);
-      expect(chunks[3].metadata.parentHeading).toBeNull();
+      expect(chunks[1].metadata.headingText).toBe('第二章');
+      expect(chunks[1].metadata.headingLevel).toBe(2);
+
+      // ### 标题不作为独立切片
+      const headingTexts = chunks.map((c) => c.metadata.headingText);
+      expect(headingTexts).not.toContain('小节 1.1');
+      expect(headingTexts).not.toContain('小节 1.2');
     });
   });
 
@@ -376,18 +373,82 @@ describe('chunkMarkdown', () => {
 
       const chunks = chunkMarkdown(content, filePath, defaultOptions);
 
-      // 验证 parentHeading 链
-      const a1 = chunks.find((c) => c.metadata.headingText === '三级标题 a1');
-      const a2 = chunks.find((c) => c.metadata.headingText === '三级标题 a2');
-      const b1 = chunks.find((c) => c.metadata.headingText === '三级标题 b1');
+      // separator='##' 时只在 ## 级别分割，### 不会成为独立切片
+      // 应该有 3 个块：前言(含 #) + 二级标题 A(含 ### a1/a2) + 二级标题 B(含 ### b1)
+      expect(chunks).toHaveLength(3);
 
-      expect(a1).toBeDefined();
-      expect(a2).toBeDefined();
-      expect(b1).toBeDefined();
+      // 前言块：包含 # 顶级标题及其内容
+      expect(chunks[0].metadata.headingText).toBe('(前言)');
+      expect(chunks[0].content).toContain('# 顶级标题');
 
-      expect(a1!.metadata.parentHeading).toBe('二级标题 A');
-      expect(a2!.metadata.parentHeading).toBe('二级标题 A');
-      expect(b1!.metadata.parentHeading).toBe('二级标题 B');
+      // 二级标题 A：包含其 ### 子标题内容
+      expect(chunks[1].metadata.headingText).toBe('二级标题 A');
+      expect(chunks[1].metadata.headingLevel).toBe(2);
+      expect(chunks[1].content).toContain('### 三级标题 a1');
+      expect(chunks[1].content).toContain('### 三级标题 a2');
+
+      // 二级标题 B：包含其 ### 子标题内容
+      expect(chunks[2].metadata.headingText).toBe('二级标题 B');
+      expect(chunks[2].metadata.headingLevel).toBe(2);
+      expect(chunks[2].content).toContain('### 三级标题 b1');
+
+      // ### 标题不作为独立切片存在
+      const headingTexts = chunks.map((c) => c.metadata.headingText);
+      expect(headingTexts).not.toContain('三级标题 a1');
+      expect(headingTexts).not.toContain('三级标题 a2');
+      expect(headingTexts).not.toContain('三级标题 b1');
+    });
+
+    it("separator='##' 时不将 ### 识别为分割点", () => {
+      const content = [
+        '## 第一章',
+        '',
+        '第一章内容。',
+        '',
+        '### 小节',
+        '',
+        '小节内容。',
+        '',
+        '## 第二章',
+        '',
+        '第二章内容。',
+      ].join('\n');
+
+      const chunks = chunkMarkdown(content, filePath, defaultOptions);
+
+      // 只有 2 个 ## 块，### 不作为分割点
+      expect(chunks).toHaveLength(2);
+
+      expect(chunks[0].metadata.headingText).toBe('第一章');
+      expect(chunks[0].content).toContain('### 小节');
+
+      expect(chunks[1].metadata.headingText).toBe('第二章');
+    });
+
+    it("separator='##' 时不将 #### 识别为分割点", () => {
+      const content = [
+        '## 第一章',
+        '',
+        '第一章内容。',
+        '',
+        '#### 四级小标题',
+        '',
+        '四级内容。',
+        '',
+        '## 第二章',
+        '',
+        '第二章内容。',
+      ].join('\n');
+
+      const chunks = chunkMarkdown(content, filePath, defaultOptions);
+
+      // 只有 2 个 ## 块，#### 不作为分割点
+      expect(chunks).toHaveLength(2);
+
+      expect(chunks[0].metadata.headingText).toBe('第一章');
+      expect(chunks[0].content).toContain('#### 四级小标题');
+
+      expect(chunks[1].metadata.headingText).toBe('第二章');
     });
   });
 });

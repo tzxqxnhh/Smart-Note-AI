@@ -3,7 +3,7 @@
  * 对 window.electronAPI 做类型化包装，统一错误处理
  */
 
-import type { FileNode, SearchResult, RagResponse, IndexStats, ChatMessage, ChunkerSettings } from '@shared/types';
+import type { FileNode, SearchResult, RagResponse, IndexStats, ChatMessage, ChunkerSettings, FileChunkGroup, ChunkDetail } from '@shared/types';
 
 function getAPI() {
   if (!window.electronAPI) {
@@ -89,6 +89,23 @@ export async function ragGetStatus() {
 
 export async function ragResetIndex() {
   return wrap(getAPI().ragResetIndex());
+}
+
+// RAG 向量库管理
+export async function ragListFileChunks(): Promise<FileChunkGroup[]> {
+  return wrap(getAPI().ragListFileChunks());
+}
+
+export async function ragGetChunkDetail(id: string): Promise<ChunkDetail | null> {
+  return wrap(getAPI().ragGetChunkDetail(id));
+}
+
+export async function ragDeleteChunks(ids: string[]): Promise<void> {
+  return wrap(getAPI().ragDeleteChunks(ids));
+}
+
+export async function ragGetChunkCount(): Promise<number> {
+  return wrap(getAPI().ragGetChunkCount());
 }
 
 // LLM

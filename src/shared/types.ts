@@ -75,6 +75,30 @@ export interface Citation {
   lineNumber?: number;
 }
 
+// 向量库管理：按文件分组的切片
+export interface FileChunkGroup {
+  filePath: string;
+  fileName: string;
+  chunkCount: number;
+  chunks: ChunkSummary[];
+}
+
+// 向量库管理：切片摘要（列表展示用）
+export interface ChunkSummary {
+  id: string;
+  contentPreview: string;   // 内容前 10 个字符
+  storedAt: string | null;  // ISO 8601 时间戳，存量数据可能为 null
+}
+
+// 向量库管理：切片详情（弹窗展示用）
+export interface ChunkDetail {
+  id: string;
+  content: string;
+  sourceFile: string;
+  headingText: string;
+  storedAt: string | null;  // ISO 8601 时间戳，存量数据可能为 null
+}
+
 // Agent 消息
 export interface ChatMessage {
   id: string;

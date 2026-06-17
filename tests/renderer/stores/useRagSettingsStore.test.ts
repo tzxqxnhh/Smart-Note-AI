@@ -108,4 +108,56 @@ describe('useRagSettingsStore', () => {
     // 出错时窗口保持打开
     expect(useRagSettingsStore.getState().isOpen).toBe(true);
   });
+
+  describe('索引成功后向量库面板自动刷新', () => {
+    it('向量库面板打开时自动刷新', async () => {
+      // Mock useVectorDbStore: isOpen=true, loadChunks 为 spy
+      const mockLoadChunks = vi.fn().mockResolvedValue(undefined);
+      vi.doMock('@/stores/useVectorDbStore', () => ({
+        useVectorDbStore: {
+          getState: () => ({ isOpen: true, loadChunks: mockLoadChunks }),
+        },
+      }));
+
+      // 重新加载被测模块以使用新 mock
+      vi.resetModules();
+      // 重新 mock ipc-client（vi.resetModules 会清除之前的 mock）
+      vi.doMock('@/lib/ipc-client', () => ({
+        ragIndexFile: vi.fn().mockResolvedValue(undefined),
+      }));
+
+      const mod = await import('@/stores/useRagSettingsStore');
+      const useRagSettingsStore = mod.useRagSettingsStore;
+
+      useRagSettingsStore.getState().openSettings('D:\\notes\\test.md');
+      await useRagSettingsStore.getState().confirmIndex();
+
+      // 验证 loadChunks 被调用
+      expect(mockLoadChunks).toHaveBeenCalled();
+    });
+
+    it('向量库面板关闭时不刷新', async () => {
+      // Mock useVectorDbStore: isOpen=false
+      const mockLoadChunks = vi.fn().mockResolvedValue(undefined);
+      vi.doMock('@/stores/useVectorDbStore', () => ({
+        useVectorDbStore: {
+          getState: () => ({ isOpen: false, loadChunks: mockLoadChunks }),
+        },
+      }));
+
+      vi.resetModules();
+      vi.doMock('@/lib/ipc-client', () => ({
+        ragIndexFile: vi.fn().mockResolvedValue(undefined),
+      }));
+
+      const mod = await import('@/stores/useRagSettingsStore');
+      const useRagSettingsStore = mod.useRagSettingsStore;
+
+      useRagSettingsStore.getState().openSettings('D:\\notes\\test.md');
+      await useRagSettingsStore.getState().confirmIndex();
+
+      // 验证 loadChunks 不被调用
+      expect(mockLoadChunks).not.toHaveBeenCalled();
+    });
+  });
 });

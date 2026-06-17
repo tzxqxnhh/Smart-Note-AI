@@ -40,4 +40,24 @@ export function setupRagHandlers(): void {
   ipcMain.handle(IPC_CHANNELS.RAG_RESET_INDEX, async () => {
     await chromaManager.resetCollection();
   });
+
+  // 向量库管理：列出所有文件切片分组
+  ipcMain.handle(IPC_CHANNELS.RAG_LIST_FILE_CHUNKS, async () => {
+    return chromaManager.listFileChunks();
+  });
+
+  // 向量库管理：获取切片详情
+  ipcMain.handle(IPC_CHANNELS.RAG_GET_CHUNK_DETAIL, async (_event, id: string) => {
+    return chromaManager.getChunkDetail(id);
+  });
+
+  // 向量库管理：按 ID 删除切片
+  ipcMain.handle(IPC_CHANNELS.RAG_DELETE_CHUNKS, async (_event, ids: string[]) => {
+    await chromaManager.deleteChunks(ids);
+  });
+
+  // 向量库管理：获取切片总数
+  ipcMain.handle(IPC_CHANNELS.RAG_GET_CHUNK_COUNT, async () => {
+    return chromaManager.getChunkCount();
+  });
 }

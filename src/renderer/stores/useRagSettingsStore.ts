@@ -59,6 +59,12 @@ export const useRagSettingsStore = create<RagSettingsState>((set, get) => ({
     try {
       await ipcClient.ragIndexFile(targetFilePath, settings);
       set({ isIndexing: false, isOpen: false, targetFilePath: null });
+
+      // 如果向量库管理面板打开，自动刷新
+      const { useVectorDbStore } = await import('./useVectorDbStore');
+      if (useVectorDbStore.getState().isOpen) {
+        await useVectorDbStore.getState().loadChunks();
+      }
     } catch (err) {
       console.error('索引失败:', err);
       set({ isIndexing: false });

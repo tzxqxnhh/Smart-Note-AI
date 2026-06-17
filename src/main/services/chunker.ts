@@ -146,7 +146,7 @@ export function chunkMarkdown(
         startOffset: getStartOffset(node),
       });
 
-      if (node.depth >= splitLevel) {
+      if (node.depth === splitLevel) {
         splitPoints.push({
           index: i,
           depth: node.depth,

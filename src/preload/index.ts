@@ -45,6 +45,16 @@ const electronAPI = {
   ragResetIndex: () =>
     ipcRenderer.invoke(IPC_CHANNELS.RAG_RESET_INDEX),
 
+  // RAG 向量库管理
+  ragListFileChunks: (): Promise<import('../shared/types').FileChunkGroup[]> =>
+    ipcRenderer.invoke(IPC_CHANNELS.RAG_LIST_FILE_CHUNKS),
+  ragGetChunkDetail: (id: string): Promise<import('../shared/types').ChunkDetail | null> =>
+    ipcRenderer.invoke(IPC_CHANNELS.RAG_GET_CHUNK_DETAIL, id),
+  ragDeleteChunks: (ids: string[]): Promise<void> =>
+    ipcRenderer.invoke(IPC_CHANNELS.RAG_DELETE_CHUNKS, ids),
+  ragGetChunkCount: (): Promise<number> =>
+    ipcRenderer.invoke(IPC_CHANNELS.RAG_GET_CHUNK_COUNT),
+
   // LLM 操作
   llmChat: (messages: unknown[]) =>
     ipcRenderer.invoke(IPC_CHANNELS.LLM_CHAT, messages),

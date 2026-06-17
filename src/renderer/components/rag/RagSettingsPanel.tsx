@@ -31,9 +31,9 @@ export function RagSettingsPanel() {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-40 flex justify-center pt-16 bg-black/40" onClick={closeSettings}>
+    <div className="fixed inset-0 z-40 flex justify-center items-center bg-black/40" onClick={closeSettings}>
       <div
-        className="w-[480px] bg-gray-850 border border-gray-600 rounded-lg shadow-2xl overflow-hidden"
+        className="w-[480px] max-h-[90vh] bg-gray-800 border border-gray-600 rounded-lg shadow-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 标题栏 */}

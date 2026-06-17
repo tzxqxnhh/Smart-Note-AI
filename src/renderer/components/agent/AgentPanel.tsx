@@ -1,10 +1,12 @@
 import { useEffect, useRef } from 'react';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Database } from 'lucide-react';
 import { useAgentStore } from '../../stores/useAgentStore';
+import { useVectorDbStore } from '../../stores/useVectorDbStore';
 import { ChatMessage } from './ChatMessage';
 import { ChatInput } from './ChatInput';
 import { PresetButtons } from './PresetButtons';
 import { StatusIndicator } from './StatusIndicator';
+import { VectorDbPanel } from '../rag/VectorDbPanel';
 
 export function AgentPanel() {
   const messages = useAgentStore((s) => s.messages);
@@ -14,6 +16,10 @@ export function AgentPanel() {
   const runPresetAction = useAgentStore((s) => s.runPresetAction);
   const clearHistory = useAgentStore((s) => s.clearHistory);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // 向量库管理面板状态
+  const isVectorDbOpen = useVectorDbStore((s) => s.isOpen);
+  const openVectorDbPanel = useVectorDbStore((s) => s.openPanel);
 
   // 自动滚动到底部
   useEffect(() => {
@@ -25,20 +31,38 @@ export function AgentPanel() {
     console.log('引用点击:', sourceFile);
   };
 
+  // 向量库管理视图
+  if (isVectorDbOpen) {
+    return (
+      <div className="h-full flex flex-col" data-testid="right-panel">
+        <VectorDbPanel />
+      </div>
+    );
+  }
+
   return (
     <div className="h-full flex flex-col" data-testid="right-panel">
       {/* 顶部状态栏 */}
       <div className="px-4 py-3 border-b border-gray-700 flex items-center justify-between">
         <span className="text-sm font-medium text-gray-300">Agent</span>
-        {messages.length > 0 && (
+        <div className="flex items-center gap-1">
           <button
             className="p-1 rounded text-gray-500 hover:text-gray-300 hover:bg-gray-700"
-            onClick={clearHistory}
-            title="清空对话"
+            onClick={openVectorDbPanel}
+            title="向量库管理"
           >
-            <Trash2 size={14} />
+            <Database size={14} />
           </button>
-        )}
+          {messages.length > 0 && (
+            <button
+              className="p-1 rounded text-gray-500 hover:text-gray-300 hover:bg-gray-700"
+              onClick={clearHistory}
+              title="清空对话"
+            >
+              <Trash2 size={14} />
+            </button>
+          )}
+        </div>
       </div>
       <StatusIndicator status={status} />
 
