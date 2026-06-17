@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { FolderOpen, RefreshCw, X } from 'lucide-react';
 import { useExplorerStore } from '../../stores/useExplorerStore';
 import { useEditorStore } from '../../stores/useEditorStore';
+import { useAgentStore } from '../../stores/useAgentStore';
 import { useRagSettingsStore } from '../../stores/useRagSettingsStore';
 import { useContextMenu } from '../../hooks/useContextMenu';
 import { TreeNode } from './TreeNode';
@@ -159,6 +160,13 @@ export function FileExplorer() {
     }
   };
 
+  // 生成结构图：设置选中文件夹并触发 visualize 操作
+  const handleVisualize = () => {
+    hideMenu();
+    useAgentStore.getState().setSelectedFolder(menuState.targetPath);
+    useAgentStore.getState().runPresetAction('visualize');
+  };
+
   // 确认删除：优先使用系统回收站，降级到永久删除
   const confirmDelete = async () => {
     if (!deleteConfirmPath) return;
@@ -306,6 +314,7 @@ export function FileExplorer() {
         onRename={handleRename}
         onDelete={handleDelete}
         onChunk={handleChunk}
+        onVisualize={handleVisualize}
       />
 
       {/* 创建输入弹窗 */}

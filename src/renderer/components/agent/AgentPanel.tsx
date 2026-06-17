@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react';
-import { Trash2, Database } from 'lucide-react';
 import { useAgentStore } from '../../stores/useAgentStore';
 import { useVectorDbStore } from '../../stores/useVectorDbStore';
 import { ChatMessage } from './ChatMessage';
@@ -12,9 +11,11 @@ export function AgentPanel() {
   const messages = useAgentStore((s) => s.messages);
   const isProcessing = useAgentStore((s) => s.isProcessing);
   const status = useAgentStore((s) => s.status);
+  const streamingMessage = useAgentStore((s) => s.streamingMessage);
+  const vectorDbEnabled = useAgentStore((s) => s.vectorDbEnabled);
   const sendQuery = useAgentStore((s) => s.sendQuery);
-  const runPresetAction = useAgentStore((s) => s.runPresetAction);
   const clearHistory = useAgentStore((s) => s.clearHistory);
+  const toggleVectorDb = useAgentStore((s) => s.toggleVectorDb);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // 向量库管理面板状态
@@ -46,22 +47,14 @@ export function AgentPanel() {
       <div className="px-4 py-3 border-b border-gray-700 flex items-center justify-between">
         <span className="text-sm font-medium text-gray-300">Agent</span>
         <div className="flex items-center gap-1">
+          {/* 向量库管理入口按钮 */}
           <button
             className="p-1 rounded text-gray-500 hover:text-gray-300 hover:bg-gray-700"
             onClick={openVectorDbPanel}
             title="向量库管理"
           >
-            <Database size={14} />
+            <span className="text-xs">DB</span>
           </button>
-          {messages.length > 0 && (
-            <button
-              className="p-1 rounded text-gray-500 hover:text-gray-300 hover:bg-gray-700"
-              onClick={clearHistory}
-              title="清空对话"
-            >
-              <Trash2 size={14} />
-            </button>
-          )}
         </div>
       </div>
       <StatusIndicator status={status} />
@@ -72,7 +65,7 @@ export function AgentPanel() {
           <div className="p-4 text-center text-gray-500 text-sm">
             <p className="mb-2">AI 笔记助手</p>
             <p className="text-xs text-gray-600">
-              向我提问，或者使用下方的快捷按钮对选中内容进行操作
+              向我提问，或者选中编辑器内容后右键进行操作
             </p>
           </div>
         ) : (
@@ -84,11 +77,24 @@ export function AgentPanel() {
             />
           ))
         )}
+        {/* 流式生成中的消息 */}
+        {streamingMessage && (
+          <ChatMessage
+            message={streamingMessage}
+            onCitationClick={handleCitationClick}
+            isStreaming={true}
+          />
+        )}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* 底部输入区 */}
-      <PresetButtons onAction={runPresetAction} disabled={isProcessing} />
+      {/* 底部操作区 */}
+      <PresetButtons
+        vectorDbEnabled={vectorDbEnabled}
+        onToggleVectorDb={toggleVectorDb}
+        onClearHistory={clearHistory}
+        disabled={isProcessing}
+      />
       <ChatInput onSend={sendQuery} disabled={isProcessing} />
     </div>
   );

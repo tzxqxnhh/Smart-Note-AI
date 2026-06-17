@@ -44,7 +44,7 @@ app.commandLine.appendSwitch('disable-gpu');
 app.commandLine.appendSwitch('disable-gpu-sandbox');
 app.commandLine.appendSwitch('disable-direct-composition');
 
-function createWindow(): void {
+function createWindow(): BrowserWindow {
   // 创建浏览器窗口
   const mainWindow = new BrowserWindow({
     width: 1280,
@@ -74,21 +74,23 @@ function createWindow(): void {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'));
   }
+
+  return mainWindow;
 }
 
 // 应用准备就绪后创建窗口
 app.whenReady().then(() => {
   electronApp.setAppUserModelId('com.demo.smart-note');
 
-  // 注册所有 IPC 处理器
-  setupIPC();
-
   // 开发环境默认打开或关闭 F12 开发者工具
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window);
   });
 
-  createWindow();
+  const mainWindow = createWindow();
+
+  // 注册所有 IPC 处理器（传入主窗口引用，供 LLM 流式推送使用）
+  setupIPC(mainWindow);
 
   app.on('activate', () => {
     // macOS: 点击 dock 图标时如果没有窗口则重新创建

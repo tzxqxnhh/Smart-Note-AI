@@ -58,6 +58,8 @@ const electronAPI = {
   // LLM 操作
   llmChat: (messages: unknown[]) =>
     ipcRenderer.invoke(IPC_CHANNELS.LLM_CHAT, messages),
+  llmChatStream: (query: string, messageId: string, vectorDbEnabled?: boolean) =>
+    ipcRenderer.send(IPC_CHANNELS.LLM_CHAT, { query, messageId, vectorDbEnabled: vectorDbEnabled ?? true }),
   llmSummarize: (text: string) =>
     ipcRenderer.invoke(IPC_CHANNELS.LLM_SUMMARIZE, text),
   llmExpand: (text: string) =>
@@ -79,6 +81,18 @@ const electronAPI = {
     const handler = (_event: Electron.IpcRendererEvent, data: unknown): void => callback(data);
     ipcRenderer.on(IPC_CHANNELS.RAG_INDEX_PROGRESS, handler);
     return () => ipcRenderer.removeListener(IPC_CHANNELS.RAG_INDEX_PROGRESS, handler);
+  },
+
+  // LLM 流式推送监听
+  onLlmStreamChunk: (callback: (data: unknown) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, data: unknown): void => callback(data);
+    ipcRenderer.on(IPC_CHANNELS.LLM_STREAM_CHUNK, handler);
+    return () => ipcRenderer.removeListener(IPC_CHANNELS.LLM_STREAM_CHUNK, handler);
+  },
+  onLlmStreamEnd: (callback: (data: unknown) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, data: unknown): void => callback(data);
+    ipcRenderer.on(IPC_CHANNELS.LLM_STREAM_END, handler);
+    return () => ipcRenderer.removeListener(IPC_CHANNELS.LLM_STREAM_END, handler);
   },
 };
 

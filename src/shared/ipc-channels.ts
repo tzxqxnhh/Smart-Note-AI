@@ -45,4 +45,8 @@ export const IPC_CHANNELS = {
   LLM_EXPAND: 'llm:expand',
   LLM_FORMAT: 'llm:format',
   LLM_GENERATE_TREE: 'llm:generate-tree',
+
+  // LLM 流式推送（主进程 → 渲染进程）
+  LLM_STREAM_CHUNK: 'llm:stream-chunk',
+  LLM_STREAM_END: 'llm:stream-end',
 } as const;

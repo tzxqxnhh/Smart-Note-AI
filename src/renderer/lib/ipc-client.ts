@@ -3,7 +3,7 @@
  * 对 window.electronAPI 做类型化包装，统一错误处理
  */
 
-import type { FileNode, SearchResult, RagResponse, IndexStats, ChatMessage, ChunkerSettings, FileChunkGroup, ChunkDetail } from '@shared/types';
+import type { FileNode, SearchResult, RagResponse, IndexStats, ChatMessage, ChunkerSettings, FileChunkGroup, ChunkDetail, ToolStep, Citation } from '@shared/types';
 
 function getAPI() {
   if (!window.electronAPI) {
@@ -113,20 +113,56 @@ export async function llmChat(messages: unknown[]) {
   return wrap(getAPI().llmChat(messages));
 }
 
-export async function llmSummarize(text: string) {
+/** 发起流式 RAG 问答 */
+export function llmChatStream(query: string, messageId: string, vectorDbEnabled?: boolean): void {
+  getAPI().llmChatStream(query, messageId, vectorDbEnabled ?? true);
+}
+
+export async function llmSummarize(text: string): Promise<string> {
   return wrap(getAPI().llmSummarize(text));
 }
 
-export async function llmExpand(text: string) {
+export async function llmExpand(text: string): Promise<string> {
   return wrap(getAPI().llmExpand(text));
 }
 
-export async function llmFormat(text: string) {
+export async function llmFormat(text: string): Promise<string> {
   return wrap(getAPI().llmFormat(text));
 }
 
-export async function llmGenerateTree(folderPath: string) {
+export async function llmGenerateTree(
+  folderPath: string,
+): Promise<{ mermaid: string; ascii: string }> {
   return wrap(getAPI().llmGenerateTree(folderPath));
+}
+
+// LLM 流式事件数据结构
+export interface LlmStreamChunkData {
+  messageId: string;
+  content: string;
+  toolSteps?: ToolStep[];
+}
+
+export interface LlmStreamEndData {
+  messageId: string;
+  content: string;
+  citations: Citation[];
+  toolSteps?: ToolStep[];
+  error?: string;
+}
+
+/** 监听 LLM 流式 token 推送 */
+export function onLlmStreamChunk(
+  callback: (data: LlmStreamChunkData) => void,
+): () => void {
+  return getAPI().onLlmStreamChunk(callback);
+}
+
+/** 监听 LLM 流式结束 */
+export function onLlmStreamEnd(
+  callback: (data: LlmStreamEndData) => void,
+): () => void {
+  return getAPI().onLlmStreamEnd(callback);
 }
 
 // 事件监听

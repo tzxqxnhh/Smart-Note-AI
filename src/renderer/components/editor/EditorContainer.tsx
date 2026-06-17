@@ -1,11 +1,13 @@
 import { useEditorStore } from '../../stores/useEditorStore';
 import { useSearchStore } from '../../stores/useSearchStore';
 import { useRagSettingsStore } from '../../stores/useRagSettingsStore';
+import { useAgentStore } from '../../stores/useAgentStore';
+import { useContextMenu } from '../../hooks/useContextMenu';
 import { EditorTabs } from './EditorTabs';
 import { EditorToolbar } from './EditorToolbar';
 import { CodeEditor } from './CodeEditor';
 import { MarkdownPreview } from './MarkdownPreview';
-import { Search, BrainCircuit } from 'lucide-react';
+import { Search, BrainCircuit, FileText, Maximize2, AlignLeft } from 'lucide-react';
 
 export function EditorContainer() {
   const tabs = useEditorStore((s) => s.tabs);
@@ -20,6 +22,11 @@ export function EditorContainer() {
 
   const openSearch = useSearchStore((s) => s.openSearch);
   const openRagSettings = useRagSettingsStore((s) => s.openSettings);
+
+  // 编辑器右键菜单
+  const selectedText = useAgentStore((s) => s.selectedText);
+  const runPresetAction = useAgentStore((s) => s.runPresetAction);
+  const { menuState, menuRef, showMenu, hideMenu } = useContextMenu();
 
   const handleRagOpen = () => {
     if (activeTabId) {
@@ -38,6 +45,18 @@ export function EditorContainer() {
     if (activeTab) {
       updateContent(activeTab.filePath, value);
     }
+  };
+
+  // 编辑器右键菜单处理
+  const handleEditorContextMenu = (e: React.MouseEvent) => {
+    if (selectedText) {
+      showMenu(e, '', '', false);
+    }
+  };
+
+  const handleEditorMenuAction = (action: 'summarize' | 'expand' | 'format') => {
+    hideMenu();
+    runPresetAction(action);
   };
 
   // 没有打开的文件
@@ -90,7 +109,7 @@ export function EditorContainer() {
       />
 
       {/* 编辑/预览区域 */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden" onContextMenu={handleEditorContextMenu}>
         {viewMode === 'edit' && (
           <CodeEditor value={activeContent} onChange={handleEditorChange} />
         )}
@@ -108,6 +127,37 @@ export function EditorContainer() {
           </div>
         )}
       </div>
+
+      {/* 编辑器右键菜单（选中文本时出现） */}
+      {menuState.isVisible && selectedText && (
+        <div
+          ref={menuRef}
+          className="fixed z-50 min-w-[160px] bg-gray-800 border border-gray-700 rounded-lg shadow-xl py-1"
+          style={{ left: menuState.x, top: menuState.y }}
+        >
+          <button
+            className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700"
+            onClick={() => handleEditorMenuAction('summarize')}
+          >
+            <FileText size={14} />
+            总结选中内容
+          </button>
+          <button
+            className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700"
+            onClick={() => handleEditorMenuAction('expand')}
+          >
+            <Maximize2 size={14} />
+            扩写选中内容
+          </button>
+          <button
+            className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700"
+            onClick={() => handleEditorMenuAction('format')}
+          >
+            <AlignLeft size={14} />
+            格式化选中内容
+          </button>
+        </div>
+      )}
     </div>
   );
 }

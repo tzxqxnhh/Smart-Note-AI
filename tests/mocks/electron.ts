@@ -25,11 +25,14 @@ export function createMockElectronAPI() {
     ragDeleteChunks: vi.fn().mockResolvedValue(undefined),
     ragGetChunkCount: vi.fn().mockResolvedValue(0),
     llmChat: vi.fn().mockResolvedValue(''),
+    llmChatStream: vi.fn(),
     llmSummarize: vi.fn().mockResolvedValue(''),
     llmExpand: vi.fn().mockResolvedValue(''),
     llmFormat: vi.fn().mockResolvedValue(''),
     llmGenerateTree: vi.fn().mockResolvedValue({ ascii: '', mermaid: '' }),
     onFileChanged: vi.fn().mockReturnValue(vi.fn()),
     onIndexProgress: vi.fn().mockReturnValue(vi.fn()),
+    onLlmStreamChunk: vi.fn().mockReturnValue(vi.fn()),
+    onLlmStreamEnd: vi.fn().mockReturnValue(vi.fn()),
   };
 }

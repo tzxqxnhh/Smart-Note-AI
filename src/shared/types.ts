@@ -99,12 +99,32 @@ export interface ChunkDetail {
   storedAt: string | null;  // ISO 8601 时间戳，存量数据可能为 null
 }
 
+// Agent 工具调用步骤
+export interface ToolStep {
+  id: string;
+  type: 'read' | 'search' | 'write';
+  status: 'running' | 'done';
+  // Read 步骤
+  filePath?: string;
+  // Search 步骤
+  chunkCount?: number;
+  chunkSources?: Array<{
+    chunkId: string;
+    sourceFile: string;
+    headingText: string;
+    contentPreview: string;
+  }>;
+  // Write 步骤
+  writtenPath?: string;
+}
+
 // Agent 消息
 export interface ChatMessage {
   id: string;
   role: 'user' | 'agent';
   content: string;
   citations?: Citation[];
+  toolSteps?: ToolStep[];
   timestamp: string;
 }
 

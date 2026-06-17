@@ -1,5 +1,5 @@
 import { forwardRef } from 'react';
-import { FilePlus, FolderPlus, Pencil, Trash2, Copy, ClipboardPaste, Scissors } from 'lucide-react';
+import { FilePlus, FolderPlus, Pencil, Trash2, Copy, ClipboardPaste, Scissors, GitBranch } from 'lucide-react';
 
 interface ContextMenuProps {
   x: number;
@@ -15,10 +15,11 @@ interface ContextMenuProps {
   onRename: () => void;
   onDelete: () => void;
   onChunk: () => void;
+  onVisualize?: () => void;
 }
 
 export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
-  ({ x, y, isVisible, isDirectory, clipboardPath, showChunkItem, onCreateFile, onCreateFolder, onCopy, onPaste, onRename, onDelete, onChunk }, ref) => {
+  ({ x, y, isVisible, isDirectory, clipboardPath, showChunkItem, onCreateFile, onCreateFolder, onCopy, onPaste, onRename, onDelete, onChunk, onVisualize }, ref) => {
     if (!isVisible) return null;
 
     return (
@@ -50,6 +51,15 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
               >
                 <ClipboardPaste size={14} />
                 粘贴
+              </button>
+            )}
+            {onVisualize && (
+              <button
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700"
+                onClick={onVisualize}
+              >
+                <GitBranch size={14} />
+                生成结构图
               </button>
             )}
             <div className="border-t border-gray-700 my-1" />

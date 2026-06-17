@@ -1,34 +1,44 @@
-import { FileText, Maximize2, AlignLeft, GitBranch, MessageSquare } from 'lucide-react';
-import type { AgentAction } from '@shared/types';
+import { Database, Trash2 } from 'lucide-react';
 
 interface PresetButtonsProps {
-  onAction: (action: AgentAction) => void;
+  vectorDbEnabled: boolean;
+  onToggleVectorDb: () => void;
+  onClearHistory: () => void;
   disabled?: boolean;
 }
 
-const presets: Array<{ action: AgentAction; label: string; icon: React.ReactNode }> = [
-  { action: 'summarize', label: '总结', icon: <FileText size={14} /> },
-  { action: 'expand', label: '扩写', icon: <Maximize2 size={14} /> },
-  { action: 'format', label: '格式化', icon: <AlignLeft size={14} /> },
-  { action: 'visualize', label: '结构图', icon: <GitBranch size={14} /> },
-  { action: 'ask', label: '问答', icon: <MessageSquare size={14} /> },
-];
-
-export function PresetButtons({ onAction, disabled = false }: PresetButtonsProps) {
+export function PresetButtons({
+  vectorDbEnabled,
+  onToggleVectorDb,
+  onClearHistory,
+  disabled = false,
+}: PresetButtonsProps) {
   return (
     <div className="flex gap-1 px-2 py-1.5 border-t border-gray-700 overflow-x-auto">
-      {presets.map((p) => (
-        <button
-          key={p.action}
-          className="flex items-center gap-1 px-2 py-1 text-xs text-gray-400 hover:text-gray-200 hover:bg-gray-700 rounded whitespace-nowrap disabled:opacity-30 transition-colors"
-          onClick={() => onAction(p.action)}
-          disabled={disabled}
-          title={p.label}
-        >
-          {p.icon}
-          <span>{p.label}</span>
-        </button>
-      ))}
+      {/* 向量库开关 */}
+      <button
+        className="flex items-center gap-1 px-2 py-1 text-xs text-gray-400 hover:text-gray-200 hover:bg-gray-700 rounded whitespace-nowrap disabled:opacity-30 transition-colors"
+        onClick={onToggleVectorDb}
+        disabled={disabled}
+        title={vectorDbEnabled ? '向量库已开启：点击关闭' : '向量库已关闭：点击开启'}
+      >
+        <Database
+          size={14}
+          className={vectorDbEnabled ? 'text-green-400' : 'text-gray-500'}
+        />
+        <span>{vectorDbEnabled ? '向量库' : '向量库(关)'}</span>
+      </button>
+
+      {/* 清空对话 */}
+      <button
+        className="flex items-center gap-1 px-2 py-1 text-xs text-gray-400 hover:text-gray-200 hover:bg-gray-700 rounded whitespace-nowrap disabled:opacity-30 transition-colors"
+        onClick={onClearHistory}
+        disabled={disabled}
+        title="清空对话"
+      >
+        <Trash2 size={14} />
+        <span>清空</span>
+      </button>
     </div>
   );
 }

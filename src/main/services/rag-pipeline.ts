@@ -4,6 +4,8 @@ import { join, extname } from 'path';
 import { chunkMarkdown, type ChunkerOptions } from './chunker';
 import { embedder } from './embedder';
 import { chromaManager } from './chroma-manager';
+import { deepseekClient } from './llm-client';
+import type { ChatMessage } from './llm-client';
 
 /**
  * RAG 流水线编排
@@ -111,6 +113,45 @@ export class RagPipeline {
   }
 
   /**
+   * RAG 查询 + LLM 生成
+   * 嵌入查询 → ChromaDB 检索 Top-K → 构建上下文 → DeepSeek 生成 → 返回带引用的答案
+   */
+  async ragQueryWithLLM(query: string): Promise<RagResponse> {
+    // 1. 嵌入查询
+    const queryEmbedding = await embedder.embedQuery(query);
+
+    // 2. ChromaDB 检索 Top-K
+    const results = await chromaManager.queryChunks(queryEmbedding, 5);
+
+    if (results.length === 0) {
+      return {
+        content: '没有在笔记中找到相关内容。',
+        citations: [],
+      };
+    }
+
+    // 3. 构建引用列表
+    const citations: Citation[] = results.map((r) => ({
+      sourceFile: (r.metadata.sourceFile as string) ?? '',
+      headingText: (r.metadata.headingText as string) ?? '',
+    }));
+
+    // 4. 构建上下文
+    const context = results
+      .map(
+        (r) =>
+          `[来源: ${(r.metadata.sourceFile as string) ?? ''} > ${(r.metadata.headingText as string) ?? ''}]\n${r.content}`,
+      )
+      .join('\n\n---\n\n');
+
+    // 5. 构建 prompt 并调用 LLM
+    const messages = buildRagPrompt(context, query);
+    const answer = await deepseekClient.chat(messages);
+
+    return { content: answer, citations };
+  }
+
+  /**
    * 递归扫描目录中的 .md 文件
    */
   private async scanMarkdownFiles(dirPath: string): Promise<string[]> {
@@ -139,6 +180,31 @@ export class RagPipeline {
 
     return results;
   }
+}
+
+/**
+ * 构建 RAG 问答的 system prompt + user message
+ * 从 IPC handler 中提取到 service 层，方便单独测试和调优
+ * @param context 检索到的笔记片段上下文
+ * @param query 用户原始问题
+ * @returns ChatMessage 数组（system + user）
+ */
+export function buildRagPrompt(context: string, query: string): ChatMessage[] {
+  const systemPrompt = `你是一个本地笔记助手。你只能基于用户提供的笔记片段来回答问题。
+如果笔记片段中没有足够的信息来回答，请直接说"笔记中没有找到相关内容"，
+不要编造信息。
+
+以下是用户笔记中的相关片段：
+---
+${context}
+---
+
+请基于以上片段回答用户的问题。引用来源时请使用 [来源: 文件名 > 标题] 的格式。`;
+
+  return [
+    { role: 'system', content: systemPrompt },
+    { role: 'user', content: query },
+  ];
 }
 
 // 单例导出
