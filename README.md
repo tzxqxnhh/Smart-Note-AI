@@ -203,10 +203,21 @@ chroma run --path ./chroma_data
 docker run -d -p 8000:8000 -v ./chroma_data:/chroma/chroma chromadb/chroma
 ```
 
+### 一键启动
+
+双击项目根目录的 `start.bat`，即可自动启动 ChromaDB 和 Electron 应用（需修改`CHROMA_CLI`为你的chroma.exe路径）：
+
+```bash
+# 在项目目录下执行
+.\start.bat
+```
+
+脚本会自动检测 ChromaDB 是否已在运行（通过 HTTP 心跳检测），等待服务就绪后启动应用。ChromaDB 启动失败时会显示超时提示。
+
 ### 开发
 
 ```bash
-# 启动开发服务器（Electron 窗口 + Vite HMR）
+# 手动启动开发服务器（Electron 窗口 + Vite HMR）
 npm run dev
 ```
 
