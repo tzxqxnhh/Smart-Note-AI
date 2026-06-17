@@ -111,6 +111,10 @@ work_history.md
 
 # 测试
 .tests/
+test/
 
 # chromadb
 chroma_data/
+
+# 快捷方式
+*.lnk
