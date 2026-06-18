@@ -158,7 +158,7 @@ demo_smart_note/
 
 - Node.js >= 22
 - npm >= 10
-- ChromaDB 服务端（用于 RAG 向量存储）
+- Docker Desktop（用于运行 ChromaDB 向量存储）
 
 ### 安装
 
@@ -195,24 +195,30 @@ DEEPSEEK_MODEL=deepseek-chat
 ### 启动 ChromaDB（RAG 功能需要）
 
 ```bash
-# 使用 pip 安装并启动
-pip install chromadb
-chroma run --path ./chroma_data
+# 使用 Docker Compose 启动（推荐）
+docker compose up -d
 
-# 或使用 Docker
-docker run -d -p 8000:8000 -v ./chroma_data:/chroma/chroma chromadb/chroma
+# 停止 ChromaDB
+docker compose down
 ```
+
+容器会在 `8000` 端口启动 ChromaDB 服务，向量数据持久化在 `./chroma_data` 目录。
 
 ### 一键启动
 
-双击项目根目录的 `start.bat`，即可自动启动 ChromaDB 和 Electron 应用（需修改`CHROMA_CLI`为你的chroma.exe路径）：
+双击项目根目录的 `start.bat`，即可自动启动 ChromaDB（Docker）和 Electron 应用：
 
 ```bash
 # 在项目目录下执行
 .\start.bat
 ```
 
-脚本会自动检测 ChromaDB 是否已在运行（通过 HTTP 心跳检测），等待服务就绪后启动应用。ChromaDB 启动失败时会显示超时提示。
+脚本流程：
+1. 检测 Docker 是否可用
+2. 检测 ChromaDB 是否已在运行（HTTP 心跳检测）
+3. 若未运行则通过 `docker compose up -d` 启动，等待服务就绪
+4. 启动 Electron 应用
+5. 关闭应用后自动执行 `docker compose down` 停止 ChromaDB
 
 ### 开发
 

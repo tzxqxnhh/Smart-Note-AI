@@ -5,9 +5,7 @@ title Smart Note Launcher
 rem ============================================================
 rem Config (from spec.md and project config)
 rem ============================================================
-set "CHROMA_CLI=你的chroma.exe程序路径(如C:\pythonenv\Scripts\chroma.exe)"
-set "CHROMA_DATA_DIR=%~dp0chroma_data"
-set "CHROMA_URL=http://localhost:8000/api/v1"
+set "CHROMA_URL=http://localhost:9510/api/v2/heartbeat"
 set "MAX_RETRIES=15"
 set "RETRY_INTERVAL=2"
 
@@ -18,16 +16,33 @@ echo ============================================================
 echo.
 
 rem ============================================================
-rem Step 1: Start ChromaDB service
+rem Step 0: Check Docker
 rem ============================================================
-echo [1/2] Checking ChromaDB service...
+echo [0/3] Checking Docker...
+docker --version >nul 2>&1
+if %errorlevel% neq 0 (
+    echo.
+    echo [ERROR] Docker is not installed or not running.
+    echo Please install Docker Desktop:
+    echo   https://www.docker.com/products/docker-desktop
+    echo.
+    pause
+    exit /b 1
+)
+echo   Docker is available
+
+rem ============================================================
+rem Step 1: Start ChromaDB via Docker
+rem ============================================================
+echo.
+echo [1/3] Checking ChromaDB service...
 
 rem Check if ChromaDB is already running (try IPv4 and IPv6)
 curl.exe -s --max-time 3 "%CHROMA_URL%" >nul 2>&1
 if %errorlevel% equ 0 goto :chroma_ready
 
 rem Also try explicit IPv6 loopback
-curl.exe -s --max-time 3 "http://[::1]:8000/api/v1" >nul 2>&1
+curl.exe -s --max-time 3 "http://[::1]:9510/api/v1" >nul 2>&1
 if %errorlevel% equ 0 goto :chroma_ready
 
 goto :chroma_not_ready
@@ -37,15 +52,23 @@ goto :chroma_not_ready
     goto :launch_app
 
 :chroma_not_ready
-echo   ChromaDB not running, starting service...
+echo   ChromaDB not running, starting via Docker...
+cd /d "%~dp0"
 
-rem Start ChromaDB via PowerShell to capture its PID
-set "PID_FILE=%TEMP%\smart_note_chroma_pid.txt"
-powershell -NoProfile -Command "$p = Start-Process -FilePath '%CHROMA_CLI%' -ArgumentList 'run','--path','%CHROMA_DATA_DIR%' -WindowStyle Minimized -PassThru; $p.Id | Out-File -FilePath '%PID_FILE%' -NoNewline"
+rem Start ChromaDB container in detached mode
+docker compose up -d chroma
+if %errorlevel% neq 0 (
+    echo.
+    echo [ERROR] Failed to start ChromaDB container.
+    echo Check Docker Desktop status and try again.
+    echo.
+    pause
+    exit /b 1
+)
 
 rem Give ChromaDB extra time to initialize before first check
 echo   Waiting for server to initialize...
-timeout /t 4 /nobreak >nul
+timeout /t 6 /nobreak >nul
 
 rem Loop waiting for ChromaDB to be ready
 set "count=0"
@@ -55,15 +78,13 @@ set "count=0"
     curl.exe -s --max-time 3 "%CHROMA_URL%" >nul 2>&1
     if %errorlevel% equ 0 goto :chroma_ready_found
 
-    curl.exe -s --max-time 3 "http://[::1]:8000/api/v1" >nul 2>&1
+    curl.exe -s --max-time 3 "http://[::1]:9510/api/v1" >nul 2>&1
     if %errorlevel% equ 0 goto :chroma_ready_found
 
     if %count% geq %MAX_RETRIES% (
         echo.
-        echo [ERROR] ChromaDB startup timed out. Please check:
-        echo   1. chroma CLI exists: %CHROMA_CLI%
-        echo   2. chromadb is installed: pip install chromadb
-        echo   3. ChromaDB window for error details
+        echo [ERROR] ChromaDB startup timed out.
+        echo Check container logs with: docker compose logs chroma
         echo.
         pause
         exit /b 1
@@ -81,21 +102,22 @@ echo.
 rem ============================================================
 rem Step 2: Start Smart Note app
 rem ============================================================
-echo [2/2] Starting Smart Note app...
+echo [2/3] Starting Smart Note app...
 echo   ^(Close the app window to stop both app and ChromaDB^)
 echo.
 cd /d "%~dp0"
 call npm run dev
 
 echo.
-rem Only kill ChromaDB if we started it ourselves (PID file exists)
-if exist "%PID_FILE%" (
-    echo ============================================================
-    echo   Smart Note app closed, stopping ChromaDB...
-    echo ============================================================
-    powershell -NoProfile -Command "try { $pidVal = Get-Content '%PID_FILE%' -Raw; Stop-Process -Id ([int]$pidVal) -Force; exit 0 } catch { exit 1 }" >nul 2>&1
-    del "%PID_FILE%" >nul 2>&1
-    echo   ChromaDB stopped.
-)
+rem ============================================================
+rem Step 3: Cleanup - stop ChromaDB container
+rem ============================================================
+echo.
+echo ============================================================
+echo   Smart Note app closed, stopping ChromaDB container...
+echo ============================================================
+cd /d "%~dp0"
+docker compose down
+echo   ChromaDB container stopped.
 echo.
 pause

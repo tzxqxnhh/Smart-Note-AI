@@ -1,0 +1,19 @@
+# Smart Note - ChromaDB 向量数据库服务
+# 使用方式: docker compose up -d
+
+services:
+  chroma:
+    image: chromadb/chroma:latest
+    container_name: smart-note-chroma
+    ports:
+      - "9510:8000"
+    volumes:
+      # 将 chroma_data 目录挂载到容器内，持久化向量数据
+      - ./chroma_data:/data
+    command: run --path /data --host 0.0.0.0
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v2/heartbeat"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

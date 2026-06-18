@@ -13,7 +13,7 @@ const noopEmbeddingFunction: EmbeddingFunction = {
 
 /**
  * ChromaDB 客户端管理
- * 连接 localhost:8000，管理向量集合
+ * 连接 localhost:9510，管理向量集合
  */
 export class ChromaManager {
   private collectionName = 'smart_note_demo';
@@ -26,7 +26,7 @@ export class ChromaManager {
    */
   async initialize(): Promise<void> {
     try {
-      this.client = new ChromaClient({ host: 'localhost', port: 8000 });
+      this.client = new ChromaClient({ host: 'localhost', port: 9510 });
       this.collection = (await this.client.getOrCreateCollection({
         name: this.collectionName,
         embeddingFunction: noopEmbeddingFunction,
